@@ -1,0 +1,17 @@
+target/
+*.class
+*.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+nbproject/private/
+nb-configuration.xml
+
+# OS
+.DS_Store
+Thumbs.db
