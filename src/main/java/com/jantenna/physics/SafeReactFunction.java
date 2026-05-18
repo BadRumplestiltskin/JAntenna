@@ -1,7 +1,6 @@
 // src/main/java/com/voacap/antenna/SafeReactFunction.java
 package com.jantenna.physics;
 
-import com.jantenna.math.GaussianQuadratureRule;
 import com.jantenna.math.QuadratureEvaluator;
 
 import com.jantenna.physics.MutualImpedanceParameters;
