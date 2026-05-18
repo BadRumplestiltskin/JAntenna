@@ -50,5 +50,35 @@ public record AntennaMetadata(
             @JsonProperty("el_count")        int      elCount,
             @JsonProperty("az_dependent")    boolean  azDependent,
             @JsonProperty("freq_dependent")  boolean  freqDependent
-    ) { }
+    ) {
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Grid that)) return false;
+            return azCount == that.azCount
+                    && elCount == that.elCount
+                    && azDependent == that.azDependent
+                    && freqDependent == that.freqDependent
+                    && java.util.Arrays.equals(frequenciesMhz, that.frequenciesMhz);
+        }
+
+        @Override
+        public int hashCode() {
+            int h = Integer.hashCode(azCount);
+            h = 31 * h + Integer.hashCode(elCount);
+            h = 31 * h + Boolean.hashCode(azDependent);
+            h = 31 * h + Boolean.hashCode(freqDependent);
+            h = 31 * h + java.util.Arrays.hashCode(frequenciesMhz);
+            return h;
+        }
+
+        @Override
+        public String toString() {
+            return "Grid[frequenciesMhz=" + java.util.Arrays.toString(frequenciesMhz)
+                    + ", azCount=" + azCount
+                    + ", elCount=" + elCount
+                    + ", azDependent=" + azDependent
+                    + ", freqDependent=" + freqDependent + ']';
+        }
+    }
 }

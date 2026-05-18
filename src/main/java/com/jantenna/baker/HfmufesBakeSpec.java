@@ -73,4 +73,41 @@ public record HfmufesBakeSpec(
         sb.append("]}");
         return sb.toString();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof HfmufesBakeSpec that)) return false;
+        return kop == that.kop
+                && Double.compare(that.sigmaSm,     sigmaSm)     == 0
+                && Double.compare(that.epsilonR,    epsilonR)    == 0
+                && Double.compare(that.antTiltDeg,  antTiltDeg)  == 0
+                && Double.compare(that.antLengthWl, antLengthWl) == 0
+                && Double.compare(that.antHeightWl, antHeightWl) == 0
+                && Double.compare(that.userGainDb,  userGainDb)  == 0
+                && java.util.Objects.equals(description, that.description)
+                && java.util.Arrays.equals(tex, that.tex);
+    }
+
+    @Override
+    public int hashCode() {
+        int h = java.util.Objects.hash(
+                kop, description, sigmaSm, epsilonR,
+                antTiltDeg, antLengthWl, antHeightWl, userGainDb);
+        h = 31 * h + java.util.Arrays.hashCode(tex);
+        return h;
+    }
+
+    @Override
+    public String toString() {
+        return "HfmufesBakeSpec[kop=" + kop
+                + ", description=" + description
+                + ", sigmaSm=" + sigmaSm
+                + ", epsilonR=" + epsilonR
+                + ", antTiltDeg=" + antTiltDeg
+                + ", antLengthWl=" + antLengthWl
+                + ", antHeightWl=" + antHeightWl
+                + ", tex=" + java.util.Arrays.toString(tex)
+                + ", userGainDb=" + userGainDb + ']';
+    }
 }
