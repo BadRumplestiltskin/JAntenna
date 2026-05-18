@@ -18,18 +18,24 @@ import java.util.List;
  */
 public interface GainTableRepository {
 
-    /** {@code true} iff a pattern with the given canonical name exists. */
+    /** {@code true} iff a pattern with the given canonical name exists.
+     * @param name
+     * @return  */
     boolean contains(String name);
 
     /**
      * Load and return the named pattern.
      *
+     * @param name
+     * @return 
      * @throws AntennaNotInRepository if the name is not present
      * @throws IOException on I/O or format errors during load
      */
     GainTable load(String name) throws IOException;
 
-    /** List all available pattern names ({@code <group>/<name>} form), sorted. */
+    /** List all available pattern names ({@code <group>/<name>} form), sorted.
+     * @return 
+     * @throws java.io.IOException */
     List<String> list() throws IOException;
 
     /**

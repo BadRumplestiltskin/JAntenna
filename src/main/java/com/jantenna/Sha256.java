@@ -12,7 +12,10 @@ public final class Sha256 {
 
     private Sha256() { }
 
-    /** Return the lowercase hex SHA-256 of the file at {@code path}. */
+    /** Return the lowercase hex SHA-256 of the file at {@code path}.
+     * @param path
+     * @return 
+     * @throws java.io.IOException */
     public static String ofFile(Path path) throws IOException {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");

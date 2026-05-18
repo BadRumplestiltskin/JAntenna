@@ -98,6 +98,8 @@ public final class FilesystemGainTableRepository implements GainTableRepository 
     /**
      * Canonicalise a pattern reference: strip any extension and
      * lowercase (locale-independent).  Forward slashes only.
+     * @param name
+     * @return 
      */
     public static String canonicalise(String name) {
         String s = name.replace('\\', '/');

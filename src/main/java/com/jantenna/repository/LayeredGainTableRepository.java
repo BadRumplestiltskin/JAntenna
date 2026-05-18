@@ -44,7 +44,6 @@ public final class LayeredGainTableRepository implements GainTableRepository {
             if (!layer.contains(name)) continue;
             try {
                 return layer.load(name);
-            } catch (AntennaNotInRepository ignored) {
             } catch (IOException ioe) {
                 if (lastError == null) lastError = ioe;
             }

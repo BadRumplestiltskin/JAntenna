@@ -35,6 +35,9 @@ public final class MetadataCodec {
     /**
      * Atomic write to a file path: writes to {@code <path>.tmp} then
      * renames over the target.  Mirrors {@link GainTableCodec#writeAtomic}.
+     * @param meta
+     * @param target
+     * @throws java.io.IOException
      */
     public static void writeAtomic(AntennaMetadata meta, Path target) throws IOException {
         Path tmp = target.resolveSibling(target.getFileName() + ".tmp");

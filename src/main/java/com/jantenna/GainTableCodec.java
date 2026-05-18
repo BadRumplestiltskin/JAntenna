@@ -116,6 +116,9 @@ public final class GainTableCodec {
      * Deserialize a {@link GainTable} from a stream.  Validates magic
      * bytes and version; throws {@link IOException} on malformed input.
      * The stream is not closed by this method.
+     * @param in
+     * @return 
+     * @throws java.io.IOException
      */
     public static GainTable read(InputStream in) throws IOException {
         DataInput d = new DataInputStream(new BufferedInputStream(in));
