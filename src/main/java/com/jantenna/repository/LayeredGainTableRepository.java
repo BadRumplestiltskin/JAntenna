@@ -39,16 +39,11 @@ public final class LayeredGainTableRepository implements GainTableRepository {
 
     @Override
     public GainTable load(String name) throws IOException {
-        IOException lastError = null;
         for (GainTableRepository layer : layers) {
-            if (!layer.contains(name)) continue;
-            try {
+            if (layer.contains(name)) {
                 return layer.load(name);
-            } catch (IOException ioe) {
-                if (lastError == null) lastError = ioe;
             }
         }
-        if (lastError != null) throw lastError;
         throw new AntennaNotInRepository(name);
     }
 
