@@ -78,12 +78,13 @@ public final class RepositoryLock implements AutoCloseable {
     @Override
     public void close() throws IOException {
         // Leave the .lock file behind - its presence is harmless and
-        // saves a create-delete round-trip on every bake.  Closing the
-        // channel releases the FileLock automatically; the explicit
-        // lock entry in the resource list ensures both are closed even
-        // if either close() throws.
-        try (FileLock l = lock; FileChannel c = channel) {
-            // both released in reverse declaration order
+        // saves a create-delete round-trip on every bake.  Release the
+        // lock first; close() always runs to drop the file handle even
+        // if release() throws.
+        try {
+            lock.release();
+        } finally {
+            channel.close();
         }
     }
 
