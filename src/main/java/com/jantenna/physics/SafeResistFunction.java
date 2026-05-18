@@ -120,32 +120,33 @@ public final class SafeResistFunction implements UnivariateFunction, QuadratureE
 
             if (s == 0.0) {
                 results[i] = limitAtZero();
-                continue;
+            } else {
+                final double sz   = s * ct;
+                final double sy   = s * prod1;
+                final double term = y0 + sy;
+                final double rho2 = term * term;
+                final double ca   = z0 + sz;
+                final double ca1  = ca + h2;
+                final double ca2  = ca - h2;
+
+                double r  = sqrt(rho2 + ca  * ca);
+                double r1 = sqrt(rho2 + ca1 * ca1);
+                double r2 = sqrt(rho2 + ca2 * ca2);
+
+                if (r == 0.0 || r1 == 0.0 || r2 == 0.0 || term == 0.0) {
+                    results[i] = 0.0;
+                } else {
+                    double sr  = sin(PI2 * r)  / r;
+                    double sr1 = sin(PI2 * r1) / r1;
+                    double sr2 = sin(PI2 * r2) / r2;
+                    double facr = 2.0 * cfac * sr;
+
+                    double inner = ((sr1 * ca1 + sr2 * ca2 - facr * ca) * sy) / term
+                                 + (facr - sr1 - sr2) * sz;
+
+                    results[i] = inner * sin(PI2 * (h2 - abs(s))) / s;
+                }
             }
-
-            final double sz   = s * ct;
-            final double sy   = s * prod1;
-            final double term = y0 + sy;
-            final double rho2 = term * term;
-            final double ca   = z0 + sz;
-            final double ca1  = ca + h2;
-            final double ca2  = ca - h2;
-
-            double r  = sqrt(rho2 + ca  * ca);
-            double r1 = sqrt(rho2 + ca1 * ca1);
-            double r2 = sqrt(rho2 + ca2 * ca2);
-
-            if (r == 0.0 || r1 == 0.0 || r2 == 0.0 || term == 0.0) { results[i] = 0.0; continue; }
-
-            double sr  = sin(PI2 * r)  / r;
-            double sr1 = sin(PI2 * r1) / r1;
-            double sr2 = sin(PI2 * r2) / r2;
-            double facr = 2.0 * cfac * sr;
-
-            double inner = ((sr1 * ca1 + sr2 * ca2 - facr * ca) * sy) / term
-                         + (facr - sr1 - sr2) * sz;
-
-            results[i] = inner * sin(PI2 * (h2 - abs(s))) / s;
         }
 
         return results;

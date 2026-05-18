@@ -64,6 +64,8 @@ public final class ManifestWriter {
     /**
      * Walk {@code root}, read every {@code .json} sidecar, write a
      * regenerated {@code manifest.json} at the repo root.
+     * @param root
+     * @throws java.io.IOException
      */
     public static void regenerate(Path root) throws IOException {
         if (!Files.exists(root)) return;

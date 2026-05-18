@@ -1,6 +1,5 @@
 package com.jantenna.baker;
 
-import com.jantenna.AntennaMetadata;
 
 import com.jantenna.physics.MufParameters;
 

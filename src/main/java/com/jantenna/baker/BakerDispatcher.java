@@ -24,6 +24,8 @@ public final class BakerDispatcher {
      * Read the {@code parm(2)} (jant) value from a {@code .voa}-format
      * source file and return the matching baker.
      *
+     * @param source
+     * @return 
      * @throws IOException on read errors or unrecognised jant
      */
     public static AntennaBaker forFile(Path source) throws IOException {

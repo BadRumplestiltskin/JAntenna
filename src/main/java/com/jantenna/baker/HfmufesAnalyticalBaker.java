@@ -9,7 +9,6 @@ import com.jantenna.physics.MufParameters;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.util.FastMath;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
 
@@ -48,12 +47,17 @@ public final class HfmufesAnalyticalBaker implements AntennaBaker {
     private final HfmufesBakeSpec spec;
     private final double[] frequenciesMHz;
 
-    /** Build with the default 3..30 MHz integer-step axis (28 frequencies). */
+    /** Build with the default 3..30 MHz integer-step axis (28 frequencies).
+     * @param calculator
+     * @param spec */
     public HfmufesAnalyticalBaker(AntennaGainCalculator calculator, HfmufesBakeSpec spec) {
         this(calculator, spec, standardFreqAxis());
     }
 
-    /** Build with an explicit frequency axis (e.g. {@code [14.15]} for single-freq). */
+    /** Build with an explicit frequency axis (e.g. {@code [14.15]} for single-freq).
+     * @param calculator
+     * @param spec
+     * @param frequenciesMHz */
     public HfmufesAnalyticalBaker(AntennaGainCalculator calculator,
                                    HfmufesBakeSpec spec,
                                    double[] frequenciesMHz) {

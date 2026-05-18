@@ -1,7 +1,6 @@
 package com.jantenna.physics;
 
 import com.jantenna.math.GaussianQuadratureRule;
-import com.jantenna.math.QuadratureEvaluator;
 
 /**
  * Provides the VOACAP 48-point Gaussian–Legendre quadrature rule over the
