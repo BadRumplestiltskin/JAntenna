@@ -95,7 +95,7 @@ public final class SlopingLongWireGainCalculator implements AntennaGainCalculato
         double w33 = azhFac4.getReal();
         double w4var = azhFac4.getImaginary();
 
-        double flog = FastMath.log(fac2) + AntennaConstants.EULER_MASCHERONI;
+        double flog = FastMath.log(fac2) + MathConstants.EULER_MASCHERONI;
         // 0.6931471806 = ln(2)
         double rin = 30.0 * (0.5 * (flog - w5) + 0.6931471806
                 + cfac2 * (cfac2 * (flog - 2.0 * w33 + w5) - sfac2 * (w6 - 2.0 * w4var)));

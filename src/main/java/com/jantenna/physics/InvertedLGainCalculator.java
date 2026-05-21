@@ -2,7 +2,6 @@ package com.jantenna.physics;
 
 import com.jantenna.math.SpecialFunctions;
 import com.jantenna.physics.MufParameters;
-import com.jantenna.physics.AntennaConstants;
 import com.jantenna.math.MathConstants;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.util.FastMath;
@@ -129,7 +128,7 @@ public final class InvertedLGainCalculator implements AntennaGainCalculator {
 
         double ci2 = csz2h.getReal();
         double ci4 = csz4h.getReal();
-        double gama = AntennaConstants.EULER_MASCHERONI;
+        double gama = MathConstants.EULER_MASCHERONI;
         double cin2 = gama + FastMath.log(w2h) - ci2;
         double cin4 = gama + FastMath.log(w4h) - ci4;
         double si2 = -csz2h.getImaginary();

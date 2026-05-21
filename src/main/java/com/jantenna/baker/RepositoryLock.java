@@ -28,12 +28,10 @@ public final class RepositoryLock implements AutoCloseable {
 
     private final FileChannel channel;
     private final FileLock    lock;
-    private final Path        lockFile;
 
-    private RepositoryLock(FileChannel channel, FileLock lock, Path lockFile) {
+    private RepositoryLock(FileChannel channel, FileLock lock) {
         this.channel = channel;
         this.lock = lock;
-        this.lockFile = lockFile;
     }
 
     /**
@@ -60,7 +58,7 @@ public final class RepositoryLock implements AutoCloseable {
             if (lock == null) {
                 throw new RepositoryLocked(root, "another process holds the lock");
             }
-            RepositoryLock acquired = new RepositoryLock(channel, lock, lockFile);
+            RepositoryLock acquired = new RepositoryLock(channel, lock);
             ownershipTransferred = true;
             return acquired;
         } finally {
@@ -70,17 +68,13 @@ public final class RepositoryLock implements AutoCloseable {
         }
     }
 
-    /** Path of the on-disk lock file (for diagnostics + tests). */
-    public Path lockFile() {
-        return lockFile;
-    }
-
     @Override
     public void close() throws IOException {
         // Leave the .lock file behind - its presence is harmless and
         // saves a create-delete round-trip on every bake.  Release the
         // lock first; close() always runs to drop the file handle even
-        // if release() throws.
+        // if release() throws.  If both throw, channel.close()'s exception
+        // suppresses lock.release()'s — standard Java finally semantics.
         try {
             lock.release();
         } finally {

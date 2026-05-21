@@ -62,8 +62,6 @@ public final class HfmufesCalculatorFactory {
      * Construct a calculator for the requested KOP.  Returns {@code null}
      * when the KOP is out of range (1..17), KOP 10 (PreStored — see class
      * javadoc), or otherwise unsupported by the analytical-baker path.
-     * @param kop
-     * @return 
      */
     public AntennaGainCalculator create(int kop) {
         return switch (kop) {
@@ -88,9 +86,7 @@ public final class HfmufesCalculatorFactory {
         };
     }
 
-    /** Human-readable KOP description for help text + diagnostic output.
-     * @param kop
-     * @return  */
+    /** Human-readable KOP description for help text + diagnostic output. */
     public static String describe(int kop) {
         return switch (kop) {
             case 1  -> "Rhombic";

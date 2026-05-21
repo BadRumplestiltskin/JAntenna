@@ -3,7 +3,6 @@ package com.jantenna.physics;
 import com.jantenna.physics.VOACAP48;
 import com.jantenna.math.SpecialFunctions;
 import com.jantenna.physics.MufParameters;
-import com.jantenna.physics.AntennaConstants;
 import com.jantenna.math.MathConstants;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.util.FastMath;
@@ -49,11 +48,11 @@ public final class VerticalRadialGroundGainCalculator implements AntennaGainCalc
 
         Complex zt1 = csz1(4.0 * fac2);
         double rzero = 0.5 * (c2kel * (zt1.getReal() - flog - 1.3862943612
-                - AntennaConstants.EULER_MASCHERONI) - s2kel * zt1.getImaginary());
+                - MathConstants.EULER_MASCHERONI) - s2kel * zt1.getImaginary());
 
         Complex zt2 = csz1(fac2 * 2.0);   // FAC4 = 2*FAC2
         rzero += 30.0 * (rzero + (1.0 + c2kel) * (-zt2.getReal() + flog
-                + 0.6931471806 + AntennaConstants.EULER_MASCHERONI) + s2kel * zt2.getImaginary());
+                + 0.6931471806 + MathConstants.EULER_MASCHERONI) + s2kel * zt2.getImaginary());
 
         if (el1 < 0.2) {
             rzero = 400.0 * el1 * el1 * RINTW / 16.0;

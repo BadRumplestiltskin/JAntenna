@@ -184,7 +184,7 @@ public final class CurtainArrayGainCalculator implements AntennaGainCalculator {
     private record BayTables(
             Complex[] rze, Complex[] rpze,
             Complex[][] rdze, Complex[][] rtze,
-            Complex[][] r, Complex[][] rp,
+            Complex[][] rEch, Complex[][] rpEch,
             Complex[][] rdz, Complex[][] rt
     ) { }
 
@@ -266,8 +266,8 @@ public final class CurtainArrayGainCalculator implements AntennaGainCalculator {
         Complex[] rpze = new Complex[mnend + 1];
         Complex[][] rdze  = new Complex[mnend + 1][ne + 1];
         Complex[][] rtze  = new Complex[mnend + 1][ne + 1];
-        Complex[][] rArr  = new Complex[mnend + 1][ijend + 1];
-        Complex[][] rpArr = new Complex[mnend + 1][ijend + 1];
+        Complex[][] rEch  = new Complex[mnend + 1][ijend + 1];
+        Complex[][] rpEch = new Complex[mnend + 1][ijend + 1];
         Complex[][] rdz   = new Complex[mnend + 1][ipjend + 1];
         Complex[][] rt    = new Complex[mnend + 1][ipjend + 1];
 
@@ -284,8 +284,8 @@ public final class CurtainArrayGainCalculator implements AntennaGainCalculator {
 
             for (int ij = 1; ij <= ijend; ij++) {
                 double cij = ij;
-                rArr[mn][ij]  = ech(cij * dz, hij, eil, 1);
-                rpArr[mn][ij] = ech(FastMath.sqrt(ts2 + cij * cij * dz * dz), hij, eil, 1);
+                rEch[mn][ij]  = ech(cij * dz, hij, eil, 1);
+                rpEch[mn][ij] = ech(FastMath.sqrt(ts2 + cij * cij * dz * dz), hij, eil, 1);
             }
 
             for (int ipj = 2; ipj <= ipjend; ipj++) {
@@ -295,7 +295,7 @@ public final class CurtainArrayGainCalculator implements AntennaGainCalculator {
             }
         }
 
-        return new BayTables(rze, rpze, rdze, rtze, rArr, rpArr, rdz, rt);
+        return new BayTables(rze, rpze, rdze, rtze, rEch, rpEch, rdz, rt);
     }
 
     // -------------------------------------------------------------------------
@@ -339,8 +339,8 @@ public final class CurtainArrayGainCalculator implements AntennaGainCalculator {
         } else {
             int mn2 = FastMath.abs(m - n2);
             int ij2 = FastMath.abs(i - j);
-            zterm1 = bay.r()[mn2][ij2];
-            zterm2 = bay.rp()[mn2][ij2];
+            zterm1 = bay.rEch()[mn2][ij2];
+            zterm2 = bay.rpEch()[mn2][ij2];
             zterm3 = bay.rdz()[mn2][i + j];
             zterm4 = bay.rt()[mn2][i + j];
         }

@@ -25,21 +25,14 @@ public final class AntennasCli {
         this(System.out, System.err, defaultRepoRoot());
     }
 
-    /** Construct with custom output streams + repo path — used by tests.
-     * @param out
-     * @param err
-     * @param repoRoot */
+    /** Construct with custom output streams + repo path — used by tests. */
     public AntennasCli(PrintStream out, PrintStream err, Path repoRoot) {
         this.out = out;
         this.err = err;
         this.repoRoot = repoRoot;
     }
 
-    /**
-     * Run a single CLI invocation.  Returns the process exit code.
-     * @param args
-     * @return 
-     */
+    /** Run a single CLI invocation.  Returns the process exit code. */
     public int run(String[] args) {
         if (args.length == 0) {
             printUsage();
@@ -89,8 +82,7 @@ public final class AntennasCli {
         out.println("Override via -Djvoacap.antennas.path=/some/dir");
     }
 
-    /** Resolves {@code -Djvoacap.antennas.path} or defaults to {@code ./antennas/}.
-     * @return  */
+    /** Resolves {@code -Djvoacap.antennas.path} or defaults to {@code ./antennas/}. */
     public static Path defaultRepoRoot() {
         String prop = System.getProperty("jvoacap.antennas.path");
         return prop != null ? Path.of(prop) : Path.of("antennas");

@@ -63,7 +63,7 @@ public final class VerticalDipoleGainCalculator implements AntennaGainCalculator
         double w5 = azh4.getReal();
         double w6 = -azh4.getImaginary();
 
-        double gama = AntennaConstants.EULER_MASCHERONI;
+        double gama = MathConstants.EULER_MASCHERONI;
         double rin = 60.0 * ((1.0 + FastMath.cos(hac2)) * (gama + FastMath.log(hac2) - w33)
                 - 0.5 * FastMath.cos(hac2) * (gama + FastMath.log(hac4) - w5)
                 + FastMath.sin(hac2) * (0.5 * w6 - w4var));

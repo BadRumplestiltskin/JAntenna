@@ -2,7 +2,6 @@ package com.jantenna.physics;
 
 import com.jantenna.math.SpecialFunctions;
 import com.jantenna.physics.MufParameters;
-import com.jantenna.physics.AntennaConstants;
 import com.jantenna.math.MathConstants;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.util.FastMath;
@@ -40,10 +39,10 @@ public final class MonopoleGainCalculator implements AntennaGainCalculator {
         double s2kel = 2.0 * FastMath.cos(fac2) * FastMath.sin(fac2);
 
         Complex zt1 = csz1(4.0 * fac2);
-        double rzero = 0.5 * (c2kel * (zt1.getReal() - flog - 1.3862943612 - AntennaConstants.EULER_MASCHERONI) - s2kel * zt1.getImaginary());
+        double rzero = 0.5 * (c2kel * (zt1.getReal() - flog - 1.3862943612 - MathConstants.EULER_MASCHERONI) - s2kel * zt1.getImaginary());
 
         Complex zt2 = csz1(fac4);
-        rzero += 30.0 * (rzero + (1.0 + c2kel) * (-zt2.getReal() + flog + 0.6931471806 + AntennaConstants.EULER_MASCHERONI) + s2kel * zt2.getImaginary());
+        rzero += 30.0 * (rzero + (1.0 + c2kel) * (-zt2.getReal() + flog + 0.6931471806 + MathConstants.EULER_MASCHERONI) + s2kel * zt2.getImaginary());
 
         if (el1 < 0.2) {
             rzero = 400.0 * el1 * el1 * 1.12875;

@@ -47,17 +47,12 @@ public final class HfmufesAnalyticalBaker implements AntennaBaker {
     private final HfmufesBakeSpec spec;
     private final double[] frequenciesMHz;
 
-    /** Build with the default 3..30 MHz integer-step axis (28 frequencies).
-     * @param calculator
-     * @param spec */
+    /** Build with the default 3..30 MHz integer-step axis (28 frequencies). */
     public HfmufesAnalyticalBaker(AntennaGainCalculator calculator, HfmufesBakeSpec spec) {
         this(calculator, spec, standardFreqAxis());
     }
 
-    /** Build with an explicit frequency axis (e.g. {@code [14.15]} for single-freq).
-     * @param calculator
-     * @param spec
-     * @param frequenciesMHz */
+    /** Build with an explicit frequency axis (e.g. {@code [14.15]} for single-freq). */
     public HfmufesAnalyticalBaker(AntennaGainCalculator calculator,
                                    HfmufesBakeSpec spec,
                                    double[] frequenciesMHz) {
