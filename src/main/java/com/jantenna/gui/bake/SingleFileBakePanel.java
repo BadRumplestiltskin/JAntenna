@@ -21,6 +21,10 @@ public class SingleFileBakePanel extends JPanel {
     private final JPanel            bottomPanel;
     private final PatternViewerPanel viewerPanel;
 
+    private final JLabel            inputError;
+    private final JLabel            outputError;
+    private final JLabel            nameError;
+
     private Path lastBakedGtable;
 
     private static final String REPO_ROOT_TOOLTIP =
@@ -41,8 +45,9 @@ public class SingleFileBakePanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
         formPanel.add(new JLabel("Input file:"), gbc);
         inputFileField = new JTextField(30);
+        inputError = FormFields.errorLabel();
         gbc.gridx = 1; gbc.weightx = 1.0;
-        formPanel.add(inputFileField, gbc);
+        formPanel.add(FormFields.withError(inputFileField, inputError), gbc);
         JButton browseInputBtn = new JButton("Browse…");
         gbc.gridx = 2; gbc.weightx = 0;
         formPanel.add(browseInputBtn, gbc);
@@ -54,8 +59,9 @@ public class SingleFileBakePanel extends JPanel {
         formPanel.add(outputLabel, gbc);
         outputFolderField = new JTextField(30);
         outputFolderField.setToolTipText(REPO_ROOT_TOOLTIP);
+        outputError = FormFields.errorLabel();
         gbc.gridx = 1; gbc.weightx = 1.0;
-        formPanel.add(outputFolderField, gbc);
+        formPanel.add(FormFields.withError(outputFolderField, outputError), gbc);
         JButton browseOutputBtn = new JButton("Browse…");
         gbc.gridx = 2; gbc.weightx = 0;
         formPanel.add(browseOutputBtn, gbc);
@@ -71,8 +77,9 @@ public class SingleFileBakePanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 3;
         formPanel.add(new JLabel("Name:"), gbc);
         nameField = new JTextField(30);
+        nameError = FormFields.errorLabel();
         gbc.gridx = 1; gbc.weightx = 1.0;
-        formPanel.add(nameField, gbc);
+        formPanel.add(FormFields.withError(nameField, nameError), gbc);
 
         add(formPanel, BorderLayout.NORTH);
 
@@ -89,6 +96,19 @@ public class SingleFileBakePanel extends JPanel {
         bottomPanel.add(new JScrollPane(logArea), BorderLayout.CENTER);
 
         add(bottomPanel, BorderLayout.CENTER);
+
+        // Button state is derived from the form, never toggled ad hoc at submit time.
+        Runnable revalidate = this::updateBakeEnabled;
+        FormFields.onTextChange(inputFileField,    revalidate);
+        FormFields.onTextChange(outputFolderField, revalidate);
+        FormFields.onTextChange(nameField,         revalidate);
+
+        // Errors appear on blur rather than while the user is still typing.
+        FormFields.onBlur(inputFileField,    () -> validateForm(true));
+        FormFields.onBlur(outputFolderField, () -> validateForm(true));
+        FormFields.onBlur(nameField,         () -> validateForm(true));
+
+        updateBakeEnabled();
 
         // Actions
         browseInputBtn.addActionListener(e -> browseInputFile());
@@ -134,19 +154,10 @@ public class SingleFileBakePanel extends JPanel {
         String group      = groupField.getText().trim();
         String name       = nameField.getText().trim();
 
-        if (inputText.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please select an input file.", "Missing Input", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        if (outputText.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please select an output folder.", "Missing Output", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+        // Field-level problems are already shown inline; this is the last guard
+        // for the keyboard path that can fire the button while it is enabled.
+        if (!validateForm(true)) return;
         if (group.isEmpty()) group = "user";
-        if (name.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter a name.", "Missing Name", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
 
         Path source   = Path.of(inputText);
         Path repoRoot = Path.of(outputText);
@@ -159,17 +170,49 @@ public class SingleFileBakePanel extends JPanel {
             source, repoRoot, group, name,
             this::appendLog,
             gtable -> {
-                bakeButton.setEnabled(true);
+                updateBakeEnabled();
                 lastBakedGtable = gtable;
                 appendLog("✓ Bake successful: " + gtable);
                 addViewPatternButton(gtable);
             },
             ex -> {
-                bakeButton.setEnabled(true);
+                updateBakeEnabled();
                 appendLog("✗ Bake failed: " + ex.getMessage());
             }
         );
         worker.execute();
+    }
+
+    /**
+     * Checks the form and, when {@code showErrors} is set, writes the reason
+     * under each offending field.
+     *
+     * @return true when the form is ready to bake
+     */
+    private boolean validateForm(boolean showErrors) {
+        String input  = inputFileField.getText().trim();
+        String output = outputFolderField.getText().trim();
+        String name   = nameField.getText().trim();
+
+        String inputMsg = input.isEmpty()
+                ? "Select a .voa/.13/.t13 source file."
+                : java.nio.file.Files.isRegularFile(Path.of(input)) ? null : "Not a file: " + input;
+        String outputMsg = output.isEmpty()
+                ? "Select the repository root to write into."
+                : null;
+        String nameMsg = name.isEmpty() ? "Enter a name for the baked table." : null;
+
+        if (showErrors) {
+            FormFields.setError(inputError,  inputMsg);
+            FormFields.setError(outputError, outputMsg);
+            FormFields.setError(nameError,   nameMsg);
+        }
+        return inputMsg == null && outputMsg == null && nameMsg == null;
+    }
+
+    /** Keeps the Bake button in step with form validity. */
+    private void updateBakeEnabled() {
+        bakeButton.setEnabled(validateForm(false));
     }
 
     private void appendLog(String msg) {

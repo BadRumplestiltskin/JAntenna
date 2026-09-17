@@ -23,6 +23,9 @@ public class BatchBakePanel extends JPanel {
     private final JProgressBar         progressBar;
     private final BatchResultTableModel tableModel;
     private final JLabel               destinationHint;
+    private final JLabel               inputError;
+    private final JLabel               outputError;
+    private final JLabel               nameError;
 
     private static final String REPO_ROOT_TOOLTIP =
             "<html>Repository root. Baked files are written to "
@@ -41,8 +44,9 @@ public class BatchBakePanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
         formPanel.add(new JLabel("Input folder:"), gbc);
         inputFolderField = new JTextField(30);
+        inputError = FormFields.errorLabel();
         gbc.gridx = 1; gbc.weightx = 1.0;
-        formPanel.add(inputFolderField, gbc);
+        formPanel.add(FormFields.withError(inputFolderField, inputError), gbc);
         JButton browseInputBtn = new JButton("Browse…");
         gbc.gridx = 2; gbc.weightx = 0;
         formPanel.add(browseInputBtn, gbc);
@@ -54,8 +58,9 @@ public class BatchBakePanel extends JPanel {
         formPanel.add(outputLabel, gbc);
         outputFolderField = new JTextField(30);
         outputFolderField.setToolTipText(REPO_ROOT_TOOLTIP);
+        outputError = FormFields.errorLabel();
         gbc.gridx = 1; gbc.weightx = 1.0;
-        formPanel.add(outputFolderField, gbc);
+        formPanel.add(FormFields.withError(outputFolderField, outputError), gbc);
         JButton browseOutputBtn = new JButton("Browse…");
         gbc.gridx = 2; gbc.weightx = 0;
         formPanel.add(browseOutputBtn, gbc);
@@ -71,8 +76,9 @@ public class BatchBakePanel extends JPanel {
         gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0;
         formPanel.add(new JLabel("Combined name:"), gbc);
         combinedNameField = new JTextField(30);
+        nameError = FormFields.errorLabel();
         gbc.gridx = 1; gbc.weightx = 1.0;
-        formPanel.add(combinedNameField, gbc);
+        formPanel.add(FormFields.withError(combinedNameField, nameError), gbc);
 
         // Row 4: Bake All + progress
         bakeAllButton = new JButton("Bake All");
@@ -97,21 +103,68 @@ public class BatchBakePanel extends JPanel {
         table.getColumnModel().getColumn(0).setPreferredWidth(200);
         table.getColumnModel().getColumn(1).setPreferredWidth(50);
         table.getColumnModel().getColumn(2).setPreferredWidth(400);
+        // Destination paths outrun the column, so carry the full text in a tooltip.
+        table.getColumnModel().getColumn(2).setCellRenderer(new TooltipCellRenderer());
         add(new JScrollPane(table), BorderLayout.CENTER);
 
         // Actions
-        javax.swing.event.DocumentListener hintUpdater = new javax.swing.event.DocumentListener() {
-            @Override public void insertUpdate(javax.swing.event.DocumentEvent e)  { updateDestinationHint(); }
-            @Override public void removeUpdate(javax.swing.event.DocumentEvent e)  { updateDestinationHint(); }
-            @Override public void changedUpdate(javax.swing.event.DocumentEvent e) { updateDestinationHint(); }
-        };
-        outputFolderField.getDocument().addDocumentListener(hintUpdater);
-        groupField.getDocument().addDocumentListener(hintUpdater);
-        combinedNameField.getDocument().addDocumentListener(hintUpdater);
+        // Button state is derived from the form, never toggled ad hoc at submit time.
+        Runnable revalidate = () -> { updateDestinationHint(); updateBakeEnabled(); };
+        FormFields.onTextChange(inputFolderField,  revalidate);
+        FormFields.onTextChange(outputFolderField, revalidate);
+        FormFields.onTextChange(groupField,        revalidate);
+        FormFields.onTextChange(combinedNameField, revalidate);
+
+        // Errors appear on blur rather than while the user is still typing.
+        FormFields.onBlur(inputFolderField,  () -> validateForm(true));
+        FormFields.onBlur(outputFolderField, () -> validateForm(true));
+        FormFields.onBlur(combinedNameField, () -> validateForm(true));
+
+        updateBakeEnabled();
 
         browseInputBtn.addActionListener(e  -> browseFolderInto(inputFolderField, true));
         browseOutputBtn.addActionListener(e -> browseFolderInto(outputFolderField, false));
         bakeAllButton.addActionListener(e   -> startBatchBake());
+    }
+
+    /**
+     * Checks the form and, when {@code showErrors} is set, writes the reason
+     * under each offending field.
+     *
+     * @return true when the form is ready to bake
+     */
+    private boolean validateForm(boolean showErrors) {
+        String input  = inputFolderField.getText().trim();
+        String output = outputFolderField.getText().trim();
+        String name   = combinedNameField.getText().trim();
+
+        String inputMsg = input.isEmpty()
+                ? "Select the folder holding the .voa/.13/.t13 sources."
+                : Files.isDirectory(Path.of(input)) ? null : "Not a folder: " + input;
+        String outputMsg = output.isEmpty()
+                ? "Select the repository root to write into."
+                : null;
+        String nameMsg = name.isEmpty() && inputFolderNameUnavailable()
+                ? "Enter a name for the combined table."
+                : null;
+
+        if (showErrors) {
+            FormFields.setError(inputError,  inputMsg);
+            FormFields.setError(outputError, outputMsg);
+            FormFields.setError(nameError,   nameMsg);
+        }
+        return inputMsg == null && outputMsg == null && nameMsg == null;
+    }
+
+    /** The combined name falls back to the input folder's name when left blank. */
+    private boolean inputFolderNameUnavailable() {
+        String input = inputFolderField.getText().trim();
+        return input.isEmpty() || Path.of(input).getFileName() == null;
+    }
+
+    /** Keeps the Bake button in step with form validity. */
+    private void updateBakeEnabled() {
+        bakeAllButton.setEnabled(validateForm(false));
     }
 
     /** Shows the exact path the combined table will be written to. */
@@ -155,14 +208,9 @@ public class BatchBakePanel extends JPanel {
         String group        = groupField.getText().trim();
         String combinedName = combinedNameField.getText().trim();
 
-        if (inputText.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please select an input folder.", "Missing Input", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        if (outputText.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please select an output folder.", "Missing Output", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+        // Field-level problems are already shown inline; this is the last guard
+        // for the keyboard path that can fire the button while it is enabled.
+        if (!validateForm(true)) return;
         if (group.isEmpty()) group = "user";
         Path inputFolder = Path.of(inputText);
         Path repoRoot    = Path.of(outputText);
@@ -192,6 +240,7 @@ public class BatchBakePanel extends JPanel {
         tableModel.clear();
         progressBar.setValue(0);
         progressBar.setMaximum(100);
+        progressBar.setString("0 of " + sourceFiles.size());
 
         for (Path f : sourceFiles) {
             tableModel.addRow(f.getFileName().toString(), "⏳", "Queued");
@@ -211,5 +260,18 @@ public class BatchBakePanel extends JPanel {
 
     public void triggerBrowseInputFolder() {
         browseFolderInto(inputFolderField, true);
+    }
+
+    /** Renders a cell normally but exposes the untruncated text on hover. */
+    private static final class TooltipCellRenderer extends javax.swing.table.DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent(
+                    table, value, isSelected, hasFocus, row, column);
+            String text = value == null ? null : value.toString();
+            setToolTipText(text == null || text.isBlank() ? null : text);
+            return c;
+        }
     }
 }

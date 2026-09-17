@@ -74,12 +74,14 @@ public class BatchBakeWorker extends SwingWorker<Void, Object[]> {
                 publish(new Object[]{ rowByPath.get(source), "✗", ex.getMessage() });
             }
             setProgress((int)(++done * 90.0 / total));
+            publishProgressText(done + " of " + total + " \u2014 " + source.getFileName());
         }
 
         if (results.isEmpty() || isCancelled()) return null;
 
         // Phase 2: merge all successfully baked tables by frequency and write
         List<Path> successful = new ArrayList<>(results.keySet());
+        publishProgressText("Merging " + successful.size() + " table(s)\u2026");
         for (Path p : successful) publish(new Object[]{ rowByPath.get(p), "⏳", "Merging…" });
 
         try {
@@ -234,6 +236,9 @@ public class BatchBakeWorker extends SwingWorker<Void, Object[]> {
     protected void done() {
         bakeAllButton.setEnabled(true);
         progressBar.setValue(progressBar.getMaximum());
+        progressBar.setString(destination != null
+                ? "Done \u2014 " + destination.getFileName()
+                : "Failed");
     }
 
 /** Absolute path of the combined table written, or {@code null} if the write failed. */
@@ -241,6 +246,11 @@ public class BatchBakeWorker extends SwingWorker<Void, Object[]> {
 
     /** Non-fatal merge warnings, e.g. duplicate frequencies. Never {@code null}. */
     public List<String> warnings() { return warnings; }
+
+/** Updates the progress bar caption on the EDT. */
+    private void publishProgressText(String text) {
+        SwingUtilities.invokeLater(() -> progressBar.setString(text));
+    }
 
     private static String stripExtension(String filename) {
         int dot = filename.lastIndexOf('.');
