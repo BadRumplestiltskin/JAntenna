@@ -22,6 +22,12 @@ public class BatchBakePanel extends JPanel {
     private final JButton              bakeAllButton;
     private final JProgressBar         progressBar;
     private final BatchResultTableModel tableModel;
+    private final JLabel               destinationHint;
+
+    private static final String REPO_ROOT_TOOLTIP =
+            "<html>Repository root. Baked files are written to "
+            + "<b>&lt;root&gt;/&lt;group&gt;/&lt;name&gt;.gtable</b>,<br>"
+            + "not directly into this folder.</html>";
 
     public BatchBakePanel() {
         super(new BorderLayout());
@@ -41,10 +47,13 @@ public class BatchBakePanel extends JPanel {
         gbc.gridx = 2; gbc.weightx = 0;
         formPanel.add(browseInputBtn, gbc);
 
-        // Row 1: Output folder
+        // Row 1: Output repository root
         gbc.gridx = 0; gbc.gridy = 1;
-        formPanel.add(new JLabel("Output folder:"), gbc);
+        JLabel outputLabel = new JLabel("Output repo root:");
+        outputLabel.setToolTipText(REPO_ROOT_TOOLTIP);
+        formPanel.add(outputLabel, gbc);
         outputFolderField = new JTextField(30);
+        outputFolderField.setToolTipText(REPO_ROOT_TOOLTIP);
         gbc.gridx = 1; gbc.weightx = 1.0;
         formPanel.add(outputFolderField, gbc);
         JButton browseOutputBtn = new JButton("Browse…");
@@ -74,6 +83,12 @@ public class BatchBakePanel extends JPanel {
         gbc.gridx = 1; gbc.gridy = 4; gbc.weightx = 1.0;
         formPanel.add(progressBar, gbc);
 
+        // Row 5: live destination hint
+        destinationHint = new JLabel(" ");
+        destinationHint.setFont(destinationHint.getFont().deriveFont(Font.ITALIC));
+        gbc.gridx = 1; gbc.gridy = 5; gbc.weightx = 1.0;
+        formPanel.add(destinationHint, gbc);
+
         add(formPanel, BorderLayout.NORTH);
 
         // Center: results table
@@ -85,9 +100,33 @@ public class BatchBakePanel extends JPanel {
         add(new JScrollPane(table), BorderLayout.CENTER);
 
         // Actions
+        javax.swing.event.DocumentListener hintUpdater = new javax.swing.event.DocumentListener() {
+            @Override public void insertUpdate(javax.swing.event.DocumentEvent e)  { updateDestinationHint(); }
+            @Override public void removeUpdate(javax.swing.event.DocumentEvent e)  { updateDestinationHint(); }
+            @Override public void changedUpdate(javax.swing.event.DocumentEvent e) { updateDestinationHint(); }
+        };
+        outputFolderField.getDocument().addDocumentListener(hintUpdater);
+        groupField.getDocument().addDocumentListener(hintUpdater);
+        combinedNameField.getDocument().addDocumentListener(hintUpdater);
+
         browseInputBtn.addActionListener(e  -> browseFolderInto(inputFolderField, true));
         browseOutputBtn.addActionListener(e -> browseFolderInto(outputFolderField, false));
         bakeAllButton.addActionListener(e   -> startBatchBake());
+    }
+
+    /** Shows the exact path the combined table will be written to. */
+    private void updateDestinationHint() {
+        String root = outputFolderField.getText().trim();
+        if (root.isEmpty()) {
+            destinationHint.setText(" ");
+            return;
+        }
+        String group = groupField.getText().trim();
+        if (group.isEmpty()) group = "user";
+        String name = combinedNameField.getText().trim();
+        if (name.isEmpty()) name = "<combined name>";
+        destinationHint.setText("Writes to: "
+                + Path.of(root).resolve(group).resolve(name + ".gtable"));
     }
 
     private void browseFolderInto(JTextField field, boolean isInput) {
