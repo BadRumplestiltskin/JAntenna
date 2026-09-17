@@ -46,7 +46,7 @@ public final class Type13Baker implements AntennaBaker {
                 table.elevationCount(),
                 true,
                 false);
-        double peak = Type11Baker.computePeak(table);
+        double peak = table.peakDbi();
         double[] freqs = table.frequenciesMHz();
         AntennaMetadata meta = new AntennaMetadata(
                 targetName, targetGroup, description, src, baker,
@@ -77,7 +77,7 @@ public final class Type13Baker implements AntennaBaker {
                         + t.frequencyCount() + "F × " + t.azimuthCount()
                         + "A × " + t.elevationCount() + "E)");
             }
-            byFreq.put(t.frequenciesMHz()[0], t.gainsCentiDb().clone());
+            byFreq.put(t.frequenciesMHz()[0], t.gainsCentiDb());
             if (description == null) description = readDescription(source);
         }
 
@@ -110,7 +110,7 @@ public final class Type13Baker implements AntennaBaker {
                 BakerVersion.VERSION);
         AntennaMetadata.Grid grid = new AntennaMetadata.Grid(
                 freqs.clone(), A, E, true, false);
-        double peak = Type11Baker.computePeak(combined);
+        double peak = combined.peakDbi();
         AntennaMetadata meta = new AntennaMetadata(
                 targetName, targetGroup, description, src, baker,
                 BakerVersion.JANTENNA_VERSION, Instant.now(),

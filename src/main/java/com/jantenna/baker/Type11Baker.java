@@ -43,7 +43,7 @@ public final class Type11Baker implements AntennaBaker {
                 table.elevationCount(),
                 false,
                 false);
-        double peak = computePeak(table);
+        double peak = table.peakDbi();
         double[] freqs = table.frequenciesMHz();
         AntennaMetadata meta = new AntennaMetadata(
                 targetName, targetGroup, description, src, baker,
@@ -59,13 +59,4 @@ public final class Type11Baker implements AntennaBaker {
         }
     }
 
-    static double computePeak(GainTable table) {
-        double peak = Double.NEGATIVE_INFINITY;
-        for (short v : table.gainsCentiDb()) {
-            if (v == GainTable.SENTINEL_CENTI_DB) continue;
-            double g = v / 100.0;
-            if (g > peak) peak = g;
-        }
-        return peak == Double.NEGATIVE_INFINITY ? GainTable.SENTINEL_DBI : peak;
-    }
 }
