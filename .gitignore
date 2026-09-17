@@ -15,3 +15,9 @@ nb-configuration.xml
 # OS
 .DS_Store
 Thumbs.db
+
+# graphify knowledge graph (regenerable: graphify extract . --code-only)
+graphify-out/
+
+# Claude Code machine-local settings
+.claude/settings.local.json
