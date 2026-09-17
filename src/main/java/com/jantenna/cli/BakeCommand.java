@@ -1,5 +1,6 @@
 package com.jantenna.cli;
 
+import com.jantenna.PathNames;
 import com.jantenna.GainTableCodec;
 import com.jantenna.baker.AntennaBaker;
 import com.jantenna.baker.BakerDispatcher;
@@ -41,7 +42,7 @@ final class BakeCommand {
             return 1;
         }
         String group = args.length >= 2 ? args[1] : "user";
-        String name = stripExtension(source.getFileName().toString());
+        String name = PathNames.stem(source);
 
         try (RepositoryLock lock = RepositoryLock.acquire(repoRoot)) {
             AntennaBaker baker = BakerDispatcher.forFile(source);
@@ -62,8 +63,4 @@ final class BakeCommand {
         }
     }
 
-    private static String stripExtension(String filename) {
-        int dot = filename.lastIndexOf('.');
-        return dot > 0 ? filename.substring(0, dot) : filename;
-    }
 }

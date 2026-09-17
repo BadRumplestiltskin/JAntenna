@@ -1,5 +1,6 @@
 package com.jantenna.baker;
 
+import com.jantenna.PathNames;
 import com.jantenna.MetadataCodec;
 
 import com.jantenna.GainTableCodec;
@@ -124,7 +125,7 @@ public final class DefaultsBakeApp {
 
         for (String filename : haveSources ? DEFAULT_SOURCES : List.<String>of()) {
             Path source = sourceRoot.resolve(filename);
-            String name = stripExt(filename);
+            String name = PathNames.stem(filename);
             try {
                 if (!Files.exists(source)) {
                     System.out.println("[jantenna-defaults] SKIP " + filename + " (not present)");
@@ -171,8 +172,4 @@ public final class DefaultsBakeApp {
         return Path.of("target/classes/antennas/default");
     }
 
-    private static String stripExt(String filename) {
-        int dot = filename.lastIndexOf('.');
-        return dot > 0 ? filename.substring(0, dot) : filename;
-    }
 }
