@@ -142,13 +142,41 @@ public record GainTable(
         return       lerp(g0,   g1,   wE);
     }
 
-    private double readDbi(int f, int a, int e) {
-        int idx = f * (azimuthsDeg.length * elevationsDeg.length)
+    /**
+     * Flat index of one grid cell. Callers that walk the grid should use this
+     * rather than reproducing the row-major layout, which is an implementation
+     * detail of this record.
+     */
+    public int index(int f, int a, int e) {
+        return f * (azimuthsDeg.length * elevationsDeg.length)
                 + a * elevationsDeg.length
                 + e;
-        short raw = gainsCentiDb[idx];
+    }
+
+    /**
+     * Stored gain at one grid point, in dBi, with no interpolation.
+     * Returns {@link #SENTINEL_DBI} for a cell carrying the sentinel.
+     */
+    public double readDbi(int f, int a, int e) {
+        short raw = gainsCentiDb[index(f, a, e)];
         if (raw == SENTINEL_CENTI_DB) return SENTINEL_DBI;
         return raw / 100.0;
+    }
+
+    /**
+     * Highest stored gain across the whole table, in dBi, ignoring sentinel
+     * cells. Returns {@link #SENTINEL_DBI} for a table that is entirely
+     * sentinel, i.e. one carrying no gain data at all.
+     */
+    public double peakDbi() {
+        double peak = Double.NEGATIVE_INFINITY;
+        for (short v : gainsCentiDb) {
+            if (v != SENTINEL_CENTI_DB) {
+                double g = v / 100.0;
+                if (g > peak) peak = g;
+            }
+        }
+        return peak == Double.NEGATIVE_INFINITY ? SENTINEL_DBI : peak;
     }
 
     private static boolean isSentinel(double dBi) {
