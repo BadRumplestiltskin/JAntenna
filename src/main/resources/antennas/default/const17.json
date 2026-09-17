@@ -1,0 +1,28 @@
+{
+  "name" : "const17",
+  "group" : "default",
+  "description" : "Const 17dB transmit antenna used by VOA",
+  "source" : {
+    "kind" : "VOA_TYPE_11",
+    "path" : "/Users/warrensly/NetBeansProjects/voacapl/voacapl/itshfbc/antennas/default/const17.voa",
+    "sha256" : "a701626c38f66c1953ecff7f47b9389b284d1f90b056e4be15c86ad22ba620ee"
+  },
+  "baker" : {
+    "module" : "Type11Baker",
+    "sha" : "jantenna-1.0.0",
+    "version" : "1.0.0"
+  },
+  "jantenna_version" : "1.0.0-SNAPSHOT",
+  "baked_at" : "2026-08-15T02:14:23.350621Z",
+  "grid" : {
+    "frequencies_mhz" : [ 0.0 ],
+    "az_count" : 1,
+    "el_count" : 91,
+    "az_dependent" : false,
+    "freq_dependent" : false
+  },
+  "peak_gain_dbi" : 17.0,
+  "min_freq_mhz" : 0.0,
+  "max_freq_mhz" : 0.0,
+  "format_version" : 1
+}

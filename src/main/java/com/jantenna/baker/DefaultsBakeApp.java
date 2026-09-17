@@ -84,11 +84,20 @@ public final class DefaultsBakeApp {
         System.out.println("[jantenna-defaults] source root: " + sourceRoot);
         System.out.println("[jantenna-defaults] output dir:  " + outputDir);
 
-        if (!Files.isDirectory(sourceRoot)) {
-            System.out.println("[jantenna-defaults] WARN: voacapl source root not found at "
+        // The baked defaults are also committed under
+        // src/main/resources/antennas/default/, so they are already in
+        // target/classes by the time this runs (process-classes follows
+        // process-resources).  Re-baking overwrites them with freshly
+        // generated copies when the voacapl sources are available; when they
+        // are not — any machine but the maintainer's, CI included — the
+        // committed copies stand and the jar still ships a populated defaults
+        // layer.  Consumers run strict-mode, so an empty layer is fatal there.
+        boolean haveSources = Files.isDirectory(sourceRoot);
+        if (!haveSources) {
+            System.out.println("[jantenna-defaults] voacapl source root not found at "
                     + sourceRoot
-                    + " — defaults layer ships empty.  Runtime fall-back still works.");
-            return;
+                    + " — keeping the committed defaults under "
+                    + "src/main/resources/antennas/default/ and baking the analytical ones.");
         }
 
         Files.createDirectories(outputDir);
@@ -113,7 +122,7 @@ public final class DefaultsBakeApp {
             }
         }
 
-        for (String filename : DEFAULT_SOURCES) {
+        for (String filename : haveSources ? DEFAULT_SOURCES : List.<String>of()) {
             Path source = sourceRoot.resolve(filename);
             String name = stripExt(filename);
             try {

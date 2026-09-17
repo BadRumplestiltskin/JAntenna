@@ -1,0 +1,28 @@
+{
+  "name" : "const5",
+  "group" : "default",
+  "description" : "Constant 5 dBi reference antenna (jvoacap golden test)",
+  "source" : {
+    "kind" : "VOA_TYPE_11",
+    "path" : "/Users/warrensly/NetBeansProjects/voacapl/voacapl/itshfbc/antennas/default/const5.voa",
+    "sha256" : "e98073d0447c890bb6c86fff42c0077b707d78b82d18acd64210aca99e63d99e"
+  },
+  "baker" : {
+    "module" : "Type11Baker",
+    "sha" : "jantenna-1.0.0",
+    "version" : "1.0.0"
+  },
+  "jantenna_version" : "1.0.0-SNAPSHOT",
+  "baked_at" : "2026-08-15T02:14:23.349567Z",
+  "grid" : {
+    "frequencies_mhz" : [ 0.0 ],
+    "az_count" : 1,
+    "el_count" : 91,
+    "az_dependent" : false,
+    "freq_dependent" : false
+  },
+  "peak_gain_dbi" : 5.0,
+  "min_freq_mhz" : 0.0,
+  "max_freq_mhz" : 0.0,
+  "format_version" : 1
+}

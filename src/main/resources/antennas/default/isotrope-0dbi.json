@@ -1,0 +1,27 @@
+{
+  "name" : "isotrope-0dbi",
+  "group" : "default",
+  "description" : "Isotrope @ 0.00 dBi",
+  "source" : {
+    "kind" : "ANALYTICAL_ISOTROPE",
+    "params" : "{\"maxGainDbi\":0.0,\"designFreqMHz\":14.15}"
+  },
+  "baker" : {
+    "module" : "IsotropeBaker",
+    "sha" : "jantenna-1.0.0",
+    "version" : "1.0.0"
+  },
+  "jantenna_version" : "1.0.0-SNAPSHOT",
+  "baked_at" : "2026-08-15T02:14:23.272985Z",
+  "grid" : {
+    "frequencies_mhz" : [ 14.15 ],
+    "az_count" : 1,
+    "el_count" : 1,
+    "az_dependent" : false,
+    "freq_dependent" : false
+  },
+  "peak_gain_dbi" : 0.0,
+  "min_freq_mhz" : 14.15,
+  "max_freq_mhz" : 14.15,
+  "format_version" : 1
+}
