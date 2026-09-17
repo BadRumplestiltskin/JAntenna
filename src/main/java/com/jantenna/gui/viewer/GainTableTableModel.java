@@ -15,10 +15,24 @@ class GainTableTableModel extends AbstractTableModel {
     private GainTable table;
     private int freqIndex;
 
+    // Axis labels never change while a table is loaded, so format them once
+    // rather than on every repaint of every visible cell.
+    private String[] azimuthLabels  = new String[0];
+    private String[] elevationLabels = new String[0];
+
     void setTable(GainTable table, int freqIndex) {
         this.table = table;
         this.freqIndex = freqIndex;
+        this.azimuthLabels   = formatDegrees(table == null ? null : table.azimuthsDeg());
+        this.elevationLabels = formatDegrees(table == null ? null : table.elevationsDeg());
         fireTableStructureChanged();
+    }
+
+    private static String[] formatDegrees(double[] axis) {
+        if (axis == null) return new String[0];
+        String[] out = new String[axis.length];
+        for (int i = 0; i < axis.length; i++) out[i] = String.format("%.1f°", axis[i]);
+        return out;
     }
 
     void setFrequencyIndex(int freqIndex) {
@@ -40,21 +54,18 @@ class GainTableTableModel extends AbstractTableModel {
     public String getColumnName(int column) {
         if (table == null) return "";
         if (column == 0) return "Az \\ El";
-        return String.format("%.1f°", table.elevationsDeg()[column - 1]);
+        return elevationLabels[column - 1];
     }
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
         if (table == null) return null;
         if (columnIndex == 0) {
-            return String.format("%.1f°", table.azimuthsDeg()[rowIndex]);
+            return azimuthLabels[rowIndex];
         }
-        int elIndex = columnIndex - 1;
-        int a = table.azimuthCount();
-        int e = table.elevationCount();
-        short raw = table.gainsCentiDb()[freqIndex * a * e + rowIndex * e + elIndex];
-        if (raw == GainTable.SENTINEL_CENTI_DB) return "—";
-        return String.format("%.2f", raw / 100.0);
+        double dbi = table.readDbi(freqIndex, rowIndex, columnIndex - 1);
+        if (dbi <= GainTable.SENTINEL_DBI) return "—";
+        return String.format("%.2f", dbi);
     }
 
     @Override

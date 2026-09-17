@@ -54,8 +54,18 @@ public class VectorizedQuadratureIntegrator implements Integrator {
 
     private final GaussianQuadratureRule rule;
 
+    /**
+     * Abscissas and weights, fetched once. The accessors hand back defensive
+     * copies, so pulling them per call cloned two arrays on every integration -
+     * and the mutual-impedance path integrates hundreds of times per grid cell.
+     */
+    private final double[] abscissas;
+    private final double[] weights;
+
     public VectorizedQuadratureIntegrator(GaussianQuadratureRule rule) {
         this.rule = Objects.requireNonNull(rule, "GaussianQuadratureRule must not be null");
+        this.abscissas = rule.getAbscissas();
+        this.weights   = rule.getWeights();
     }
 
     @Override
@@ -68,8 +78,6 @@ public class VectorizedQuadratureIntegrator implements Integrator {
             throw new IllegalArgumentException("lowerBound must be less than upperBound");
         }
 
-        final double[] abscissas = rule.getAbscissas();
-        final double[] weights = rule.getWeights();
         final int n = abscissas.length;
 
         final double scale = (upperBound - lowerBound) / 2.0;

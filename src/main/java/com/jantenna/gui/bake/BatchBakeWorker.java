@@ -1,5 +1,6 @@
 package com.jantenna.gui.bake;
 
+import com.jantenna.PathNames;
 import com.jantenna.AntennaMetadata;
 import com.jantenna.BakerVersion;
 import com.jantenna.GainTable;
@@ -67,7 +68,7 @@ public class BatchBakeWorker extends SwingWorker<Void, Object[]> {
             try {
                 AntennaBaker baker = BakerDispatcher.forFile(source);
                 AntennaBaker.BakeResult result = baker.bake(source, group,
-                        stripExtension(source.getFileName().toString()));
+                        PathNames.stem(source));
                 results.put(source, result);
                 publish(new Object[]{ rowByPath.get(source), "⏳", "Baked" });
             } catch (Exception ex) {
@@ -174,7 +175,7 @@ public class BatchBakeWorker extends SwingWorker<Void, Object[]> {
                         "%.4f MHz: %s overrides %s (duplicate frequency)",
                         freq, label, previous));
             }
-            byFreq.put(freq, t.gainsCentiDb().clone());
+            byFreq.put(freq, t.gainsCentiDb());
         }
 
         int F = byFreq.size();
@@ -201,7 +202,7 @@ public class BatchBakeWorker extends SwingWorker<Void, Object[]> {
                 merged.elevationCount(),
                 merged.azimuthCount() > 1,
                 freqs.length > 1);
-        double peak = computePeak(merged);
+        double peak = merged.peakDbi();
         return new AntennaMetadata(
                 name, group, representative.description(),
                 src, representative.baker(),
@@ -209,16 +210,6 @@ public class BatchBakeWorker extends SwingWorker<Void, Object[]> {
                 grid, peak, freqs[0], freqs[freqs.length - 1], 1);
     }
 
-    private static double computePeak(GainTable t) {
-        double peak = Double.NEGATIVE_INFINITY;
-        for (short v : t.gainsCentiDb()) {
-            if (v != GainTable.SENTINEL_CENTI_DB) {
-                double g = v / 100.0;
-                if (g > peak) peak = g;
-            }
-        }
-        return Double.isInfinite(peak) ? 0.0 : peak;
-    }
 
     @Override
     protected void process(List<Object[]> chunks) {
@@ -252,8 +243,4 @@ public class BatchBakeWorker extends SwingWorker<Void, Object[]> {
         SwingUtilities.invokeLater(() -> progressBar.setString(text));
     }
 
-    private static String stripExtension(String filename) {
-        int dot = filename.lastIndexOf('.');
-        return dot > 0 ? filename.substring(0, dot) : filename;
-    }
 }

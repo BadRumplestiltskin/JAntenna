@@ -74,25 +74,31 @@ public final class HfmufesAnalyticalBaker implements AntennaBaker {
     @Override
     public BakeResult bake(Path source, String targetGroup, String targetName) {
         // source path ignored — analytical
-        double[][][] gains = new double[frequenciesMHz.length][360][91];
+        //
+        // Written straight into the flat int16 grid: an intermediate
+        // double[F][360][91] tensor would cost ~7 MB and a second full pass
+        // over 917k cells purely to convert.
+        short[] flat = new short[frequenciesMHz.length * 360 * 91];
         double peak = Double.NEGATIVE_INFINITY;
+        int idx = 0;
 
         for (int f = 0; f < frequenciesMHz.length; f++) {
             double freq = frequenciesMHz[f];
             double wave = VOFL / freq;
+            // Ground constants depend on wavelength alone, not on direction.
+            Complex dif = new Complex(spec.epsilonR(), -60.0 * spec.sigmaSm() * wave);
             for (int a = 0; a < 360; a++) {
                 double azRad = FastMath.toRadians(a);
                 for (int e = 0; e < 91; e++) {
                     if (e == 0) {
                         // Below-horizon row — encode sentinel so the runtime
                         // sentinel-collapse path engages naturally.
-                        gains[f][a][e] = GainTable.SENTINEL_DBI;
+                        flat[idx++] = GainTable.toCentiDb(GainTable.SENTINEL_DBI);
                         continue;
                     }
                     double elRad = FastMath.toRadians(e);
                     double sinEl = FastMath.sin(elRad);
                     double cosEl = FastMath.cos(elRad);
-                    Complex dif  = new Complex(spec.epsilonR(), -60.0 * spec.sigmaSm() * wave);
                     Complex acsq = dif.subtract(cosEl * cosEl).sqrt();
                     Complex qpar = new Complex(sinEl).subtract(acsq)
                                                      .divide(new Complex(sinEl).add(acsq));
@@ -101,21 +107,8 @@ public final class HfmufesAnalyticalBaker implements AntennaBaker {
                     MufParameters params = spec.at(freq, azRad, elRad);
                     double gainDbi = calculator.calculateGain(params, sinEl, cosEl, wave, qpar, qper, dif)
                                    + spec.userGainDb();
-                    gains[f][a][e] = gainDbi;
+                    flat[idx++] = GainTable.toCentiDb(gainDbi);
                     if (gainDbi > peak) peak = gainDbi;
-                }
-            }
-        }
-
-        // Build the GainTable from the trilinear (F × A × E) tensor we just
-        // computed.  No factory method covers this shape directly, so wire
-        // the int16 conversion in-place via toCentiDb.
-        short[] flat = new short[frequenciesMHz.length * 360 * 91];
-        int idx = 0;
-        for (int f = 0; f < frequenciesMHz.length; f++) {
-            for (int a = 0; a < 360; a++) {
-                for (int e = 0; e < 91; e++) {
-                    flat[idx++] = GainTable.toCentiDb(gains[f][a][e]);
                 }
             }
         }

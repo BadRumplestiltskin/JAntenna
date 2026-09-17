@@ -102,13 +102,13 @@ public final class GainTableCodec {
 
     private static void writeAxis(DataOutput d, double[] axis) throws IOException {
         ByteBuffer buf = ByteBuffer.allocate(axis.length * Double.BYTES).order(ByteOrder.LITTLE_ENDIAN);
-        for (double v : axis) buf.putDouble(v);
+        buf.asDoubleBuffer().put(axis);
         d.write(buf.array());
     }
 
     private static void writeGains(DataOutput d, short[] gains) throws IOException {
         ByteBuffer buf = ByteBuffer.allocate(gains.length * Short.BYTES).order(ByteOrder.LITTLE_ENDIAN);
-        for (short v : gains) buf.putShort(v);
+        buf.asShortBuffer().put(gains);
         d.write(buf.array());
     }
 
@@ -160,9 +160,9 @@ public final class GainTableCodec {
     private static double[] readAxis(DataInput d, int n) throws IOException {
         byte[] bytes = new byte[n * Double.BYTES];
         d.readFully(bytes);
-        ByteBuffer buf = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
         double[] out = new double[n];
-        for (int i = 0; i < n; i++) out[i] = buf.getDouble();
+        // Bulk transfer: one intrinsic copy rather than n bounds-checked reads.
+        ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asDoubleBuffer().get(out);
         return out;
     }
 
@@ -175,9 +175,9 @@ public final class GainTableCodec {
                     "Truncated .gtable: expected " + bytes.length
                     + " bytes of gain data, hit EOF", eof);
         }
-        ByteBuffer buf = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
         short[] out = new short[n];
-        for (int i = 0; i < n; i++) out[i] = buf.getShort();
+        // Bulk transfer: a full 360x91x28 table is ~917k elements.
+        ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(out);
         return out;
     }
 
