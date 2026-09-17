@@ -1,5 +1,6 @@
 package com.jantenna.gui.bake;
 
+import com.jantenna.PathNames;
 import com.jantenna.gui.AppPreferences;
 import com.jantenna.gui.FileSystemTreePanel;
 import com.jantenna.gui.viewer.PatternViewerPanel;
@@ -99,7 +100,7 @@ public class BakePanel extends JPanel {
         List<Path> files = inputTree.getSelectedFilePaths();
         if (files.isEmpty()) return;
         if (combinedNameField.getText().isBlank() || combinedNameField.isFocusOwner()) return;
-        String stem = stemOf(files.get(0));
+        String stem = PathNames.stem(files.get(0));
         combinedNameField.setText(stem);
 
         Path parent = files.get(0).getParent();
@@ -124,7 +125,7 @@ public class BakePanel extends JPanel {
         }
 
         String name = combinedNameField.getText().trim();
-        if (name.isEmpty()) name = stemOf(sources.get(0));
+        if (name.isEmpty()) name = PathNames.stem(sources.get(0));
 
         // Populate results table
         tableModel.clear();
@@ -148,9 +149,4 @@ public class BakePanel extends JPanel {
         worker.execute();
     }
 
-    private static String stemOf(Path p) {
-        String name = p.getFileName().toString();
-        int dot = name.lastIndexOf('.');
-        return dot > 0 ? name.substring(0, dot) : name;
-    }
 }
