@@ -21,3 +21,7 @@ graphify-out/
 
 # Claude Code machine-local settings
 .claude/settings.local.json
+
+# Third-party skills installed via `npx skills add` (3.9 MB of vendored data)
+.claude/skills/
+skills-lock.json
