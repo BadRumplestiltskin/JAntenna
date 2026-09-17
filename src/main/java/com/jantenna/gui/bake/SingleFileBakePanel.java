@@ -23,6 +23,11 @@ public class SingleFileBakePanel extends JPanel {
 
     private Path lastBakedGtable;
 
+    private static final String REPO_ROOT_TOOLTIP =
+            "<html>Repository root. Baked files are written to "
+            + "<b>&lt;root&gt;/&lt;group&gt;/&lt;name&gt;.gtable</b>,<br>"
+            + "not directly into this folder.</html>";
+
     public SingleFileBakePanel(PatternViewerPanel viewerPanel) {
         super(new BorderLayout());
         this.viewerPanel = viewerPanel;
@@ -42,10 +47,13 @@ public class SingleFileBakePanel extends JPanel {
         gbc.gridx = 2; gbc.weightx = 0;
         formPanel.add(browseInputBtn, gbc);
 
-        // Row 1: Output folder
+        // Row 1: Output repository root
         gbc.gridx = 0; gbc.gridy = 1;
-        formPanel.add(new JLabel("Output folder:"), gbc);
+        JLabel outputLabel = new JLabel("Output repo root:");
+        outputLabel.setToolTipText(REPO_ROOT_TOOLTIP);
+        formPanel.add(outputLabel, gbc);
         outputFolderField = new JTextField(30);
+        outputFolderField.setToolTipText(REPO_ROOT_TOOLTIP);
         gbc.gridx = 1; gbc.weightx = 1.0;
         formPanel.add(outputFolderField, gbc);
         JButton browseOutputBtn = new JButton("Browse…");

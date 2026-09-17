@@ -30,6 +30,12 @@ public class BatchBakeWorker extends SwingWorker<Void, Object[]> {
     private final JProgressBar           progressBar;
     private final BatchResultTableModel  tableModel;
 
+    /** Row index signalling "not a source file row" — appended instead of updated. */
+    private static final int WARNING_ROW = -1;
+
+    private Path         destination;
+    private List<String> warnings = List.of();
+
     public BatchBakeWorker(List<Path> sourceFiles, Path repoRoot, String group,
                            String combinedName,
                            JButton bakeAllButton, JProgressBar progressBar,
@@ -79,7 +85,10 @@ public class BatchBakeWorker extends SwingWorker<Void, Object[]> {
         try {
             List<GainTable> tables = results.values().stream()
                     .map(AntennaBaker.BakeResult::table).toList();
-            GainTable merged = mergeByFrequency(tables);
+            List<String> labels = successful.stream()
+                    .map(p -> p.getFileName().toString()).toList();
+            MergeResult mergeResult = mergeByFrequency(tables, labels);
+            GainTable merged = mergeResult.table();
 
             AntennaMetadata firstMeta = results.values().iterator().next().metadata();
             AntennaMetadata meta = buildCombinedMeta(merged, firstMeta,
@@ -96,11 +105,18 @@ public class BatchBakeWorker extends SwingWorker<Void, Object[]> {
                 MetadataCodec.writeAtomic(meta, metaPath);
                 ManifestWriter.regenerate(repoRoot);
 
-                String msg = "→ " + gtablePath.getFileName();
+                // Show the full destination so the group subdirectory is never a surprise.
+                String msg = "→ " + gtablePath.toAbsolutePath();
                 for (Path p : successful) publish(new Object[]{ rowByPath.get(p), "✓", msg });
+
+                for (String warning : mergeResult.warnings()) {
+                    publish(new Object[]{ WARNING_ROW, "⚠", warning });
+                }
+                destination = gtablePath.toAbsolutePath();
+                warnings    = mergeResult.warnings();
             }
         } catch (Exception ex) {
-            String msg = ex.getMessage();
+            String msg = ex.getMessage() != null ? ex.getMessage() : ex.toString();
             for (Path p : successful) publish(new Object[]{ rowByPath.get(p), "✗", msg });
         }
 
@@ -109,11 +125,23 @@ public class BatchBakeWorker extends SwingWorker<Void, Object[]> {
     }
 
     /**
-     * Merges a list of single-frequency GainTables into one multi-frequency table,
-     * sorted ascending by frequency. All tables must share the same azimuth and
-     * elevation axes. Duplicate frequencies retain the last entry.
+     * Result of merging source tables: the combined table plus any non-fatal
+     * warnings the user should see (e.g. duplicate frequencies).
      */
-    private static GainTable mergeByFrequency(List<GainTable> tables) {
+    record MergeResult(GainTable table, List<String> warnings) {}
+
+    /**
+     * Merges single-frequency GainTables into one multi-frequency table, sorted
+     * ascending by frequency. All tables must share the same azimuth and
+     * elevation axes.
+     *
+     * <p>When two sources carry the same frequency only the last one survives;
+     * that is reported as a warning rather than dropped silently.
+     *
+     * @param tables  source tables, parallel to {@code labels}
+     * @param labels  display names for the sources, used in warning messages
+     */
+    static MergeResult mergeByFrequency(List<GainTable> tables, List<String> labels) {
         if (tables.isEmpty()) throw new IllegalArgumentException("No tables to merge");
 
         double[] azimuths   = tables.get(0).azimuthsDeg();
@@ -126,13 +154,25 @@ public class BatchBakeWorker extends SwingWorker<Void, Object[]> {
                     + t.frequencyCount() + " frequencies");
             if (t.azimuthCount() != A || t.elevationCount() != E)
                 throw new IllegalArgumentException(
-                        "Incompatible grid shapes: expected " + A + "×" + E
-                        + ", got " + t.azimuthCount() + "×" + t.elevationCount());
+                        "Incompatible grid shapes: expected " + A + "\u00d7" + E
+                        + ", got " + t.azimuthCount() + "\u00d7" + t.elevationCount());
         }
 
-        TreeMap<Double, short[]> byFreq = new TreeMap<>();
-        for (GainTable t : tables) {
-            byFreq.put(t.frequenciesMHz()[0], t.gainsCentiDb().clone());
+        TreeMap<Double, short[]> byFreq  = new TreeMap<>();
+        TreeMap<Double, String>  ownerOf = new TreeMap<>();
+        List<String> warnings = new ArrayList<>();
+
+        for (int i = 0; i < tables.size(); i++) {
+            GainTable t = tables.get(i);
+            String label = i < labels.size() ? labels.get(i) : "source " + i;
+            double freq = t.frequenciesMHz()[0];
+            String previous = ownerOf.put(freq, label);
+            if (previous != null) {
+                warnings.add(String.format(
+                        "%.4f MHz: %s overrides %s (duplicate frequency)",
+                        freq, label, previous));
+            }
+            byFreq.put(freq, t.gainsCentiDb().clone());
         }
 
         int F = byFreq.size();
@@ -144,7 +184,7 @@ public class BatchBakeWorker extends SwingWorker<Void, Object[]> {
             System.arraycopy(entry.getValue(), 0, flat, fi * A * E, A * E);
             fi++;
         }
-        return new GainTable(freqs, azimuths, elevations, flat);
+        return new MergeResult(new GainTable(freqs, azimuths, elevations, flat), warnings);
     }
 
     private static AntennaMetadata buildCombinedMeta(
@@ -181,7 +221,12 @@ public class BatchBakeWorker extends SwingWorker<Void, Object[]> {
     @Override
     protected void process(List<Object[]> chunks) {
         for (Object[] chunk : chunks) {
-            tableModel.updateRow((int) chunk[0], (String) chunk[1], (String) chunk[2]);
+            int row = (int) chunk[0];
+            if (row == WARNING_ROW) {
+                tableModel.addRow("(merge)", (String) chunk[1], (String) chunk[2]);
+            } else {
+                tableModel.updateRow(row, (String) chunk[1], (String) chunk[2]);
+            }
         }
     }
 
@@ -190,6 +235,12 @@ public class BatchBakeWorker extends SwingWorker<Void, Object[]> {
         bakeAllButton.setEnabled(true);
         progressBar.setValue(progressBar.getMaximum());
     }
+
+/** Absolute path of the combined table written, or {@code null} if the write failed. */
+    public Path destination() { return destination; }
+
+    /** Non-fatal merge warnings, e.g. duplicate frequencies. Never {@code null}. */
+    public List<String> warnings() { return warnings; }
 
     private static String stripExtension(String filename) {
         int dot = filename.lastIndexOf('.');
