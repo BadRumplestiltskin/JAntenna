@@ -18,6 +18,7 @@ public class PatternViewerPanel extends JPanel {
     private final AntennaPlotPanel hPlane;
     private final AntennaPlotPanel vPlane;
     private final AntennaPattern3DPanel panel3D;
+    private final DataTablePanel   dataTable;
     private final JTabbedPane      viewTabs;
 
     private GainTable loadedTable;
@@ -28,6 +29,7 @@ public class PatternViewerPanel extends JPanel {
         hPlane  = new AntennaPlotPanel(AntennaPlotPanel.CutType.H_PLANE);
         vPlane  = new AntennaPlotPanel(AntennaPlotPanel.CutType.V_PLANE);
         panel3D = new AntennaPattern3DPanel();
+        dataTable = new DataTablePanel();
 
         // North: file bar + shared frequency slider
         JPanel fileBar = new JPanel();
@@ -56,6 +58,7 @@ public class PatternViewerPanel extends JPanel {
             hPlane.setFrequencyIndex(fi);
             vPlane.setFrequencyIndex(fi);
             panel3D.setFrequencyIndex(fi);
+            dataTable.setFrequencyIndex(fi);
         });
         fileBar.add(freqSlider);
 
@@ -73,6 +76,7 @@ public class PatternViewerPanel extends JPanel {
         viewTabs = new JTabbedPane();
         viewTabs.addTab("2D Cuts", cutsPane);
         viewTabs.addTab("3D View", panel3D);
+        viewTabs.addTab("Data Table", dataTable);
 
         add(viewTabs, BorderLayout.CENTER);
     }
@@ -96,6 +100,7 @@ public class PatternViewerPanel extends JPanel {
             hPlane.setTable(table, 0);
             vPlane.setTable(table, 0);
             panel3D.setTable(table, 0);
+            dataTable.setTable(table, 0);
 
             // Enable 3D tab only for patterns that have full azimuth data
             viewTabs.setEnabledAt(1, table.azimuthCount() > 1);
